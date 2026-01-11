@@ -1,0 +1,35 @@
+
+.post{
+    width: calc(65ch + calc(2 * clamp(1rem, 6vw, 2rem)));
+    background-color: white;
+    border:1px solid var(--border-color);
+    padding:2rem clamp(1rem, 6vw, 2rem);
+    border-radius: 5px;
+    max-width: 100%;
+
+    ul{
+        padding-inline-start: 40px;
+    }
+
+    h1,h2,h3,h4,h5,h6{
+        margin-block: .5em;
+    }
+    p{
+        margin-block:1em 1.5em;
+    }
+    li{
+        margin-bottom: .5em;
+    }
+
+    .feature-img{
+        width: 100%;
+        margin-block-end: 2rem;
+
+        img{
+                width: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 1px 1px 3px 1px var(--border-color);
+        }
+    }
+}
