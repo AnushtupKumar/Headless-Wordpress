@@ -1,17 +1,18 @@
 import './App.css'
-import { useState, useEffect, useContext, useRef } from 'react'
+import React, { useState, useEffect, useContext, useRef, use, Suspense, useMemo } from 'react'
 import { Route, Router, Link, RouteContext } from './Router';
 import PostPage from './Post';
 import Loading from './components/Loading';
 import Header from './components/Header';
 import Shop, { ProductItem } from './page/Shop';
 import Product from './page/Product';
-import {  getPosts, getSearch } from './fetch-helper';
+import { getPosts, getSearch } from './fetch-helper';
 import ErrorHandler from './components/ErrorHandler';
 import ArchivePage from './page/archive';
 import SearchPage from './page/search';
+import { ErrorBoundary } from 'react-error-boundary';
 
-export function Animate({ children, show, duration, classToAddAtStart , classToAddAtEnd }) {
+export function Animate({ children, show, duration, classToAddAtStart, classToAddAtEnd }) {
     const [isExiting, setIsExiting] = useState(false);
     const [isSuspended, setIsSuspended] = useState(false);
     const ref = useRef();
@@ -28,13 +29,13 @@ export function Animate({ children, show, duration, classToAddAtStart , classToA
         }
         else {
             setIsExiting(true);
-        } 
+        }
     }, [show]);
 
     let className = "";
     let style = {};
 
-    if(duration) style.animationDuration = duration;
+    if (duration) style.animationDuration = duration;
 
     if (!isExiting && isSuspended) return <></>
 
@@ -48,7 +49,27 @@ export function Animate({ children, show, duration, classToAddAtStart , classToA
 
 }
 
-// getSearch("biology",2, "product").then(res=>console.log(res))
+
+const LazyLoadContext = React.createContext();
+
+export function LazyLoad({promise, fallback = <Loading />, errorFallback = <ErrorHandler reset={function () { }}>Something went wrong</ErrorHandler>, children }) {
+    
+    return <ErrorBoundary fallback={errorFallback}>
+        <Suspense fallback={fallback}>
+            <Wait promise={promise} children={children}>
+            </Wait>
+        </Suspense>
+    </ErrorBoundary>
+}
+
+function Wait({promise, children}){
+    const data = use(promise);
+    if(children instanceof Function) return children(data);
+    return  <LazyLoadContext.Provider value={data}>
+        {children}
+    </LazyLoadContext.Provider>
+}
+
 
 function App() {
 
@@ -67,6 +88,8 @@ function App() {
         </Router>
     </>
     );
+
+
 }
 
 export default App
@@ -82,7 +105,7 @@ export function BlogPage() {
     const totalPageNo = useRef();
 
     async function loadPosts() {
-        if(!isLoading) setIsLoading(true);
+        if (!isLoading) setIsLoading(true);
         try {
             await getPosts({
                 filters: {
@@ -110,11 +133,11 @@ export function BlogPage() {
 
     return (
         <>
-        <div className="posts">
-            {data.map((item, index) => {
-                return <PostItem key={item.id} data={item} />
-            })}
-</div>
+            <div className="posts">
+                {data.map((item, index) => {
+                    return <PostItem key={item.id} data={item} />
+                })}
+            </div>
             <NavigatePages currentPageNo={params.pageNo || 1} totalPageNo={totalPageNo.current} />
         </>
     )
@@ -130,7 +153,7 @@ export function PostItem({ data }) {
                 <img src={data.feature_img} alt='dummy' />
             </picture>
             <h2 className='title poppins-bold'><Link href={"/post/" + data.slug} dangerouslySetInnerHTML={{ __html: data.title }}></Link></h2>
-            <div className="excerpt" dangerouslySetInnerHTML={{ __html: data.excerpt  }}></div>
+            <div className="excerpt" dangerouslySetInnerHTML={{ __html: data.excerpt }}></div>
         </div>
     )
 }

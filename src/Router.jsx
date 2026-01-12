@@ -5,32 +5,29 @@ const RouterContext = React.createContext();
 
 export function Router({ children }) {
     const [currentUrl, setCurrentUrl] = useState(location.pathname);
-    const propagate = useRef({});
 
     function navigateTo(path) {
-        if(path == currentUrl) return;
+        if (path == currentUrl) return;
         history.pushState({}, "", location.origin + path);
         setCurrentUrl(path);
     }
 
-    useEffect(()=>{
-        const updateLocation = (e)=>{
+    useEffect(() => {
+        const updateLocation = (e) => {
             setCurrentUrl(location.pathname);
         }
 
         window.addEventListener("popstate", updateLocation);
 
-        return ()=>window.removeEventListener("popstate", updateLocation);
-    },[])
+        return () => window.removeEventListener("popstate", updateLocation);
+    }, [])
 
-    return (<RouterContext.Provider value={{ currentUrl, navigateTo, propagate }} >
-        {children}
-    </RouterContext.Provider>)
+    return (<RouterContext.Provider value={{ currentUrl, navigateTo }}>{children}</RouterContext.Provider>)
 }
 
 export const RouteContext = React.createContext();
 
-export function Route({ path, children , __values = {}}) {
+export function Route({ path, children, __values }) {
 
     const { currentUrl } = useContext(RouterContext);
 
@@ -38,8 +35,9 @@ export function Route({ path, children , __values = {}}) {
     const pattern = path.replaceAll("/", "\\/").replaceAll(/\$\{\w+\}/g, "([^/]+)");
     const regexp = new RegExp(`^${pattern}$`);
 
-    const matchInCurrentUrl = currentUrl.replace(location.search, "").match(regexp);
-    
+    const pathOnly = currentUrl.split("?")[0].split("#")[0];
+    const matchInCurrentUrl = pathOnly.match(regexp);
+
     let params = {};
     if (matchInCurrentUrl) {
         let s = [...matchInCurrentUrl];
@@ -47,18 +45,21 @@ export function Route({ path, children , __values = {}}) {
             params[value[1]] = s[index + 1];
         })
 
-        return <RouteContext.Provider value={{ params: params , __values }}>{children}</RouteContext.Provider>
+        return <RouteContext.Provider value={{ params: params, __values }}>
+            {React.Children.map(children, child => React.isValidElement(child) ? React.cloneElement(child) : child)}
+        </RouteContext.Provider>
     }
+
     return <></>
 }
 
-export function Link({children, onClick, ...rest}){
-    const {navigateTo} = useContext(RouterContext);
-    const handleClick = (e)=>{
-            e.preventDefault();
-            if(onClick instanceof Function) onClick();
-            navigateTo(e.currentTarget.getAttribute("href"));
-      
+export function Link({ children, onClick, ...rest }) {
+    const { navigateTo } = useContext(RouterContext);
+    const handleClick = (e) => {
+        e.preventDefault();
+        if (onClick instanceof Function) onClick();
+        navigateTo(e.currentTarget.getAttribute("href"));
+
     }
     return <a onClick={handleClick} {...rest}>{children}</a>
 }

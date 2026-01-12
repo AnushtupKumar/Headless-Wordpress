@@ -118,7 +118,7 @@ export function Reviews({productId}){
     if(data.length == 0) return <p>No review yet. Be First Review.... </p>
     return (
         <div className="reviews">
-            {data.map((rev, index)=>{
+            {data.map(rev=>{
                 return <div key={rev.id} className="review">
                     <div className="avatar">
                         <img width="60px" height="60px" src={rev.reviewer_avatar_urls["48"]}/>

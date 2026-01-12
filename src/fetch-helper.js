@@ -237,3 +237,33 @@ export function getSearch(searchString, pageNo, post = "post"){
     if(post == "post") return getPosts(parameters);
     else if(post == "product") return getProducts(parameters);
 }
+
+export function getComments(postId, params = {}) {
+    if(!postId) throw new Error("post id is missing");
+
+    let parameters = {
+        post: `comments`,
+        ...params,
+        filters: {
+            post: postId,
+            ...(params.filters && params.filters)
+        }
+
+    }
+
+    return fetchWP(parameters).then(res => {
+        return {
+            totalPageNo: res.headers.get("x-wp-totalpages"),
+            data: res.data.map(comment => {
+                return {
+                    id: comment.id,
+                    post_id: postId,
+                    date_created: comment.date,
+                    content: comment.content.rendered,
+                    author: comment.author_name,
+                    commentor_avatar_urls: comment.author_avatar_urls
+                }
+            
+        })}
+    }, err => {throw new Error("error during parsing of json")});
+}
